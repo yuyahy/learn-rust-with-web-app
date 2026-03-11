@@ -21,11 +21,8 @@ pub async fn find_todo<T: TodoRepository>(
     Path(id): Path<i32>,
     Extension(repository): Extension<Arc<T>>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    todo!();
-
-    // todo `Resulr<impl IntoResponse, StatusCode>`が推論できないため、
-    // コンパイルエラーを通すために暫定でOKを返す
-    Ok(StatusCode::OK)
+    let todo = repository.find(id).ok_or(StatusCode::NOT_FOUND)?;
+    Ok((StatusCode::OK, Json(todo)))
 }
 
 pub async fn all_todo<T: TodoRepository>(
