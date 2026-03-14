@@ -6,6 +6,7 @@ use std::{
 use anyhow::{Context, Ok};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use validator::Validate;
 
 #[derive(Debug, Error)]
 enum RepositoryError {
@@ -17,7 +18,7 @@ pub trait TodoRepository: Clone + std::marker::Send + std::marker::Sync + 'stati
     fn create(&self, payload: CreateTodo) -> Todo;
     fn find(&self, id: i32) -> Option<Todo>;
     fn all(&self) -> Vec<Todo>;
-    fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo>;
+    fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo>;
     fn delete(&self, id: i32) -> anyhow::Result<()>;
 }
 
@@ -28,8 +29,9 @@ pub struct Todo {
     completed: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Validate)]
 pub struct CreateTodo {
+    #[validate(length(min = 1, max = 100, message = "Can not be empty or over text length"))]
     text: String,
 }
 
@@ -39,8 +41,10 @@ impl CreateTodo {
         Self { text }
     }
 }
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Validate)]
 pub struct UpdateTodo {
+    id: i32,
+    #[validate(length(min = 1, max = 100, message = "Can not be empty or over text length"))]
     text: Option<String>,
     completed: Option<bool>,
 }
@@ -101,8 +105,9 @@ impl TodoRepository for TodoRepositoryForMemory {
         Vec::from_iter(store.values().map(|todo| todo.clone()))
     }
 
-    fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
+    fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo> {
         let mut store = self.write_store_ref();
+        let id = payload.id;
         let todo = store.get(&id).context(RepositoryError::NotFound(id))?;
         let text = payload.text.unwrap_or(todo.text.clone());
         let completed = payload.completed.unwrap_or(todo.completed);
@@ -148,13 +153,11 @@ mod test {
         // update
         let text = "update todo text".to_string();
         let todo = repository
-            .update(
-                1,
-                UpdateTodo {
-                    text: Some(text.clone()),
-                    completed: Some(true),
-                },
-            )
+            .update(UpdateTodo {
+                id: 1,
+                text: Some(text.clone()),
+                completed: Some(true),
+            })
             .expect("failed update todo");
         assert_eq!(
             Todo {
