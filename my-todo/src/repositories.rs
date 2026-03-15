@@ -74,12 +74,12 @@ impl TodoRepositoryForMemory {
     }
 
     // スレッドセーフにHash Mapを取得
-    fn write_store_ref(&self) -> RwLockWriteGuard<TodoDatas> {
+    fn write_store_ref(&self) -> RwLockWriteGuard<'_, TodoDatas> {
         self.store.write().unwrap()
     }
 
     // スレッドセーフにHash Mapを取得
-    fn read_store_ref(&self) -> RwLockReadGuard<TodoDatas> {
+    fn read_store_ref(&self) -> RwLockReadGuard<'_, TodoDatas> {
         self.store.read().unwrap()
     }
 }
@@ -96,13 +96,13 @@ impl TodoRepository for TodoRepositoryForMemory {
     fn find(&self, id: i32) -> Option<Todo> {
         let store = self.read_store_ref();
         // cloneして所有権のあるTodoを返すことで、関数終了時のロック解放後も安全に使えるようにする
-        store.get(&id).map(|todo| todo.clone())
+        store.get(&id).cloned()
     }
 
     fn all(&self) -> Vec<Todo> {
         let store = self.read_store_ref();
         // cloneして所有権のあるTodoを返すことで、関数終了時のロック解放後も安全に使えるようにする
-        Vec::from_iter(store.values().map(|todo| todo.clone()))
+        Vec::from_iter(store.values().cloned())
     }
 
     fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo> {

@@ -1,0 +1,4 @@
+[advisories]
+ignore = [
+    "RUSTSEC-2022-0055", # axum-core: リクエストボディのデフォルトサイズ制限なし（axum 0.4使用のため）
+]

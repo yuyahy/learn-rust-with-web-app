@@ -3,20 +3,14 @@ mod repositories;
 
 use crate::repositories::{TodoRepository, TodoRepositoryForMemory};
 
-use anyhow::Context;
 use axum::{
     extract::Extension,
-    http::StatusCode,
-    response::IntoResponse,
     routing::{get, post},
-    Json, Router,
+    Router,
 };
 use handlers::{all_todo, create_todo, delete_todo, find_todo, update_todo};
 use std::net::SocketAddr;
-use std::{
-    env,
-    sync::{Arc, RwLock},
-};
+use std::{env, sync::Arc};
 
 #[tokio::main]
 async fn main() {
