@@ -8,7 +8,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use handlers::{all_todo, create_todo, delete_todo, find_todo, update_todo};
 use sqlx::PgPool;
 use std::net::SocketAddr;
