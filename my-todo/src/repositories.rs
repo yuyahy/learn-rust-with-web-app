@@ -6,9 +6,12 @@ use std::{
 use anyhow::{Context, Ok};
 use axum::async_trait;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 use thiserror::Error;
 use validator::Validate;
 
+// TODO: RepositoryErrorをハンドラー等から利用する
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 enum RepositoryError {
     #[error("NotFound, id is {0}")]
@@ -51,6 +54,8 @@ pub struct UpdateTodo {
     completed: Option<bool>,
 }
 
+// TODO: Todo::newをテスト以外のコードからも利用する
+#[allow(dead_code)]
 impl Todo {
     pub fn new(id: i32, text: String) -> Self {
         Self {
@@ -61,14 +66,18 @@ impl Todo {
     }
 }
 
+// TODO: TodoRepositoryForMemoryをテスト以外のコードからも利用するか、テスト専用に整理する
+#[allow(dead_code)]
 type TodoDatas = HashMap<i32, Todo>;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TodoRepositoryForMemory {
     store: Arc<RwLock<TodoDatas>>,
 }
 
 impl TodoRepositoryForMemory {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         TodoRepositoryForMemory {
             store: Arc::default(),
@@ -131,6 +140,42 @@ impl TodoRepository for TodoRepositoryForMemory {
         let mut store = self.write_store_ref();
         store.remove(&id).ok_or(RepositoryError::NotFound(id))?;
         Ok(())
+    }
+}
+
+// TODO: TodoRepositoryForDbの各メソッドを実装してpoolフィールドを利用する
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+pub struct TodoRepositoryForDb {
+    pool: PgPool,
+}
+
+impl TodoRepositoryForDb {
+    pub fn new(pool: PgPool) -> Self {
+        TodoRepositoryForDb { pool }
+    }
+}
+
+#[async_trait]
+impl TodoRepository for TodoRepositoryForDb {
+    async fn create(&self, _payload: CreateTodo) -> anyhow::Result<Todo> {
+        todo!()
+    }
+
+    async fn find(&self, _id: i32) -> anyhow::Result<Todo> {
+        todo!()
+    }
+
+    async fn all(&self) -> anyhow::Result<Vec<Todo>> {
+        todo!()
+    }
+
+    async fn update(&self, _payload: UpdateTodo) -> anyhow::Result<Todo> {
+        todo!()
+    }
+
+    async fn delete(&self, _id: i32) -> anyhow::Result<()> {
+        todo!()
     }
 }
 
