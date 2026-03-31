@@ -20,7 +20,7 @@ pub trait TodoRepository: Clone + std::marker::Send + std::marker::Sync + 'stati
     async fn create(&self, payload: CreateTodo) -> anyhow::Result<Todo>;
     async fn find(&self, id: i32) -> anyhow::Result<Todo>;
     async fn all(&self) -> anyhow::Result<Vec<Todo>>;
-    async fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo>;
+    async fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo>;
     async fn delete(&self, id: i32) -> anyhow::Result<()>;
 }
 
@@ -39,7 +39,6 @@ pub struct CreateTodo {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Validate)]
 pub struct UpdateTodo {
-    id: i32,
     #[validate(length(min = 1, max = 100, message = "Can not be empty or over text length"))]
     text: Option<String>,
     completed: Option<bool>,
@@ -104,8 +103,7 @@ impl TodoRepository for TodoRepositoryForDb {
         Ok(todos)
     }
 
-    async fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo> {
-        let id = payload.id;
+    async fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
         let old_todo = self.find(id).await?;
         let todo = sqlx::query_as::<_, Todo>(
             r#"
@@ -215,9 +213,8 @@ pub mod test_utils {
             Ok(Vec::from_iter(store.values().cloned()))
         }
 
-        async fn update(&self, payload: UpdateTodo) -> anyhow::Result<Todo> {
+        async fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo> {
             let mut store = self.write_store_ref();
-            let id = payload.id;
             let todo = store.get(&id).context(RepositoryError::NotFound(id))?;
             let text = payload.text.unwrap_or(todo.text.clone());
             let completed = payload.completed.unwrap_or(todo.completed);
@@ -265,11 +262,13 @@ pub mod test_utils {
             // update
             let text = "update todo text".to_string();
             let todo = repository
-                .update(UpdateTodo {
-                    id: 1,
-                    text: Some(text.clone()),
-                    completed: Some(true),
-                })
+                .update(
+                    1,
+                    UpdateTodo {
+                        text: Some(text.clone()),
+                        completed: Some(true),
+                    },
+                )
                 .await
                 .expect("failed update todo");
             assert_eq!(

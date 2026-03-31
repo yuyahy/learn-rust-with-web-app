@@ -64,11 +64,12 @@ pub async fn all_todo<T: TodoRepository>(
 }
 
 pub async fn update_todo<T: TodoRepository>(
+    Path(id): Path<i32>,
     ValidatedJson(payload): ValidatedJson<UpdateTodo>,
     Extension(repository): Extension<Arc<T>>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let todo = repository
-        .update(payload)
+        .update(id, payload)
         .await
         .or(Err(StatusCode::NOT_FOUND))?;
     Ok((StatusCode::CREATED, Json(todo)))
