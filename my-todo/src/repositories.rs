@@ -56,6 +56,7 @@ impl TodoRepositoryForDb {
 }
 
 #[cfg(test)]
+#[cfg(feature = "database-test")]
 mod test {
     use super::*;
     use dotenvy::dotenv;
