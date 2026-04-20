@@ -2,7 +2,7 @@ import {useState,FC} from 'react'
 import 'modern-css-reset'
 import {ThemeProvider, createTheme} from '@mui/material/styles'
 import {Box, Typography} from '@mui/material'
-import {NewTodoPayload, Todo} from './types/todo'
+import type {NewTodoPayload, Todo} from './types/todo'
 import TodoForm from './components/TodoForm'
 
 const TodoApp: FC=() => {

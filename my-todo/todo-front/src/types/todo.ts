@@ -4,6 +4,6 @@ export type Todo = {
 	completed: boolean
 }
 
-export type NewTodoPayload=[
-	text:string
-]
+export type NewTodoPayload = {
+	text: string
+}
