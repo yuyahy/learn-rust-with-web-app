@@ -24,7 +24,7 @@ const TodoList: FC<Props> = ({ todos, onUpdate }) => {
 			<Stack spacing={2}>
 				{todos.map((todo) => (
 					<Card key={todo.id} sx={{ p: 2 }}>
-						<Stack direction="row" alignItems="center">
+						<Stack direction="row" sx={{ alignItems: "center" }}>
 							<Checkbox
 								checked={todo.completed}
 								onChange={() => handleCompletedCheckBox(todo)}

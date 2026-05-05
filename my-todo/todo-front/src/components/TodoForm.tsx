@@ -19,7 +19,7 @@ const TodoForm: FC<Props> = ({ onSubmit }) => {
     <Paper elevation={2}>
       <Box sx={{ p: 2 }}>
         <Grid container rowSpacing={2} columnSpacing={5}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               label="new todo text"
               variant="filled"
@@ -28,8 +28,8 @@ const TodoForm: FC<Props> = ({ onSubmit }) => {
               onChange={(e) => setText(e.target.value)}
             />
           </Grid>
-          <Grid item xs={9} />
-          <Grid item xs={3}>
+          <Grid size={9} />
+          <Grid size={3}>
             <Button onClick={addTodoHandler} fullWidth>
               add todo
             </Button>
