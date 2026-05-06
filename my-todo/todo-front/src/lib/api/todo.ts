@@ -14,3 +14,13 @@ export const addTodoItem = async (payload: NewTodoPayload) =>{
 	const json: Todo = await res.json()
 	return json
 }
+
+export const getTodoItems = async () => {
+	// NOTE: GET methodの場合はオプションの指定は不要
+	const res = await fetch('http://localhost:3000/todos')
+	if (!res.ok) {
+		throw new Error('get todo request failed')
+	}
+	const json: Todo[] = await res.json()
+	return json
+}

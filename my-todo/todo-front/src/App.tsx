@@ -1,11 +1,11 @@
-import { useState, FC } from "react";
+import {useEffect, useState, FC } from "react";
 import "modern-css-reset";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Box, Stack, Typography } from "@mui/material";
 import type { NewTodoPayload, Todo } from "./types/todo";
 import TodoList from "./components/TodoList";
 import TodoForm from "./components/TodoForm";
-import { addTodoItem } from "./lib/api/todo";
+import { addTodoItem, getTodoItems } from "./lib/api/todo";
 
 const TodoApp: FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -14,8 +14,12 @@ const TodoApp: FC = () => {
   const onSubmit = async (payload: NewTodoPayload) => {
     if (!payload.text) return;
 
-    const newTodo = await addTodoItem(payload);
-    setTodos((prev) => [newTodo, ...prev]);
+    // Todoをバックエンドに送信
+    await addTodoItem(payload)
+    // UIの状態をバックエンドの最新の状態と同期させるため、
+    // APIより再度Todo配列を取得
+    const todos = await getTodoItems()
+    setTodos(todos)
   };
 
   const onUpdate = (updateTodo: Todo) => {
@@ -31,6 +35,15 @@ const TodoApp: FC = () => {
       }),
     );
   };
+
+  // コンポーネントがマウントされたタイミング(e.g. 画面を新規に開いた、リロードした)で、最新のTodoをバックエンドから取得し、
+  // 画面に反映するuseEffect()
+  useEffect(() => {
+    ;(async () => {
+      const todos = await getTodoItems()
+      setTodos(todos)
+    })()
+  }, [])
 
   return (
     <>
