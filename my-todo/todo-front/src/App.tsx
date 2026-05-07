@@ -5,7 +5,7 @@ import { Box, Stack, Typography } from "@mui/material";
 import type { NewTodoPayload, Todo } from "./types/todo";
 import TodoList from "./components/TodoList";
 import TodoForm from "./components/TodoForm";
-import { addTodoItem, getTodoItems } from "./lib/api/todo";
+import { addTodoItem, getTodoItems, updateTodoItem, deleteTodoItem} from "./lib/api/todo";
 
 const TodoApp: FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -22,19 +22,19 @@ const TodoApp: FC = () => {
     setTodos(todos)
   };
 
-  const onUpdate = (updateTodo: Todo) => {
-    setTodos(
-      todos.map((todo) => {
-        if (todo.id === updateTodo.id) {
-          return {
-            ...todo,
-            ...updateTodo, // 必要な部分だけoverwride
-          };
-        }
-        return todo;
-      }),
-    );
-  };
+  const onUpdate = async (todo: Todo) => {
+    await updateTodoItem(todo)
+    // APIより再度Todo配列を取得
+    const todos = await getTodoItems()
+    setTodos(todos)
+  }
+
+  const onDelete = async (id: number) => {
+    await deleteTodoItem(id)
+    // APIより再度Todo配列を取得
+    const todos = await getTodoItems()
+    setTodos(todos)
+  }
 
   // コンポーネントがマウントされたタイミング(e.g. 画面を新規に開いた、リロードした)で、最新のTodoをバックエンドから取得し、
   // 画面に反映するuseEffect()
@@ -74,7 +74,7 @@ const TodoApp: FC = () => {
         <Box sx={{ maxWidth: 700, width: "100%" }}>
           <Stack spacing={5}>
             <TodoForm onSubmit={onSubmit} />
-            <TodoList todos={todos} onUpdate={onUpdate} />
+            <TodoList todos={todos} onUpdate={onUpdate} onDelete={onDelete}/>
           </Stack>
         </Box>
       </Box>
