@@ -1,7 +1,7 @@
 mod handlers;
 mod repositories;
 
-use crate::repositories::{TodoRepository, TodoRepositoryForDb};
+use crate::repositories::todo::{TodoRepository, TodoRepositoryForDb};
 
 use axum::{
     extract::Extension,
@@ -9,7 +9,7 @@ use axum::{
     Router,
 };
 use dotenvy::dotenv;
-use handlers::{all_todo, create_todo, delete_todo, find_todo, update_todo};
+use handlers::todo::{all_todo, create_todo, delete_todo, find_todo, update_todo};
 use hyper::header::CONTENT_TYPE;
 use hyper::Method;
 use sqlx::PgPool;
@@ -74,7 +74,7 @@ async fn root() -> &'static str {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::repositories::{test_utils::TodoRepositoryForMemory, CreateTodo, Todo};
+    use crate::repositories::todo::{test_utils::TodoRepositoryForMemory, CreateTodo, Todo};
     use axum::response::Response;
     use axum::{
         body::Body,
