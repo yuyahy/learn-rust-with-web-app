@@ -96,6 +96,63 @@ impl LabelRepository for LabelRepositoryForDb {
 }
 
 #[cfg(test)]
+pub mod test_utils {
+    use super::*;
+    use std::{
+        collections::HashMap,
+        sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
+    };
+
+    type LabelDatas = HashMap<i32, Label>;
+
+    #[derive(Debug, Clone)]
+    pub struct LabelRepositoryForMemory {
+        store: Arc<RwLock<LabelDatas>>,
+    }
+
+    impl LabelRepositoryForMemory {
+        pub fn new() -> Self {
+            LabelRepositoryForMemory {
+                store: Arc::default(),
+            }
+        }
+
+        fn write_store_ref(&self) -> RwLockWriteGuard<'_, LabelDatas> {
+            self.store.write().unwrap()
+        }
+
+        fn read_store_ref(&self) -> RwLockReadGuard<'_, LabelDatas> {
+            self.store.read().unwrap()
+        }
+    }
+
+    #[async_trait]
+    impl LabelRepository for LabelRepositoryForMemory {
+        async fn create(&self, name: String) -> anyhow::Result<Label> {
+            let mut store = self.write_store_ref();
+            let id = (store.len() + 1) as i32;
+            let label = Label {
+                id,
+                name: name.clone(),
+            };
+            store.insert(id, label.clone());
+            Ok(label)
+        }
+
+        async fn all(&self) -> anyhow::Result<Vec<Label>> {
+            let store = self.read_store_ref();
+            Ok(Vec::from_iter(store.values().cloned()))
+        }
+
+        async fn delete(&self, id: i32) -> anyhow::Result<()> {
+            let mut store = self.write_store_ref();
+            store.remove(&id).ok_or(RepositoryError::NotFound(id))?;
+            Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
 #[cfg(feature = "database-test")]
 mod test {
     use super::*;
