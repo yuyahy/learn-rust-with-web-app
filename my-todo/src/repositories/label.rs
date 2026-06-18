@@ -156,7 +156,7 @@ pub mod test_utils {
 #[cfg(feature = "database-test")]
 mod test {
     use super::*;
-    use dotenv::dotenv;
+    use dotenvy::dotenv;
     use sqlx::PgPool;
     use std::env;
 
