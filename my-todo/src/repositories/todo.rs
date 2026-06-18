@@ -19,8 +19,8 @@ pub struct TodoWithLabelFromRow {
     id: i32,
     text: String,
     completed: bool,
-    // label_id: Option<i32>,
-    // label_name: Option<String>,
+    label_id: Option<i32>,
+    label_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -32,19 +32,37 @@ pub struct TodoEntity {
 }
 
 fn fold_entities(rows: Vec<TodoWithLabelFromRow>) -> Vec<TodoEntity> {
-    rows.iter()
-        .fold(vec![], |mut accum: Vec<TodoEntity>, current| {
-            // todo 同一idのtodoを畳み込み
-            // todo 同一idの場合、Labelを作成し｀labels`へpush
+    let mut accum: Vec<TodoEntity> = vec![];
+    'outer: for row in rows.iter() {
+        for todo in accum.iter_mut() {
+            // idが一致=Todoに紐づくラベルが複数存在している
+            if todo.id == row.id {
+                todo.labels.push(Label {
+                    id: row.label_id.unwrap(),
+                    name: row.label_name.clone().unwrap(),
+                });
+                continue 'outer;
+            }
+        }
 
-            accum.push(TodoEntity {
-                id: current.id,
-                text: current.text.clone(),
-                completed: current.completed,
-                labels: vec![],
-            });
-            accum
-        })
+        // Todoのidに一致がなかったときのみ到達、TodoEntityを作成
+        let labels = if let Some(label_id) = row.label_id {
+            vec![Label {
+                id: label_id,
+                name: row.label_name.clone().unwrap(),
+            }]
+        } else {
+            vec![]
+        };
+
+        accum.push(TodoEntity {
+            id: row.id,
+            text: row.text.clone(),
+            completed: row.completed,
+            labels,
+        });
+    }
+    accum
 }
 
 fn fold_entity(row: TodoWithLabelFromRow) -> TodoEntity {
@@ -79,13 +97,69 @@ impl TodoRepositoryForDb {
 }
 
 #[cfg(test)]
-#[cfg(feature = "database-test")]
 mod test {
     use super::*;
+    #[cfg(feature = "database-test")]
     use dotenvy::dotenv;
+    #[cfg(feature = "database-test")]
     use sqlx::PgPool;
+    #[cfg(feature = "database-test")]
     use std::env;
 
+    #[test]
+    fn fold_entities_test() {
+        let label_1 = Label {
+            id: 1,
+            name: String::from("label 1"),
+        };
+        let label_2 = Label {
+            id: 2,
+            name: String::from("label 2"),
+        };
+        let rows = vec![
+            TodoWithLabelFromRow {
+                id: 1,
+                text: String::from("todo 1"),
+                completed: false,
+                label_id: Some(label_1.id),
+                label_name: Some(label_1.name.clone()),
+            },
+            TodoWithLabelFromRow {
+                id: 1,
+                text: String::from("todo 1"),
+                completed: false,
+                label_id: Some(label_2.id),
+                label_name: Some(label_2.name.clone()),
+            },
+            TodoWithLabelFromRow {
+                id: 2,
+                text: String::from("todo 2"),
+                completed: false,
+                label_id: Some(label_1.id),
+                label_name: Some(label_1.name.clone()),
+            },
+        ];
+        let res = fold_entities(rows);
+        assert_eq!(
+            res,
+            vec![
+                TodoEntity {
+                    id: 1,
+                    text: String::from("todo 1"),
+                    completed: false,
+                    labels: vec![label_1.clone(), label_2.clone()],
+                },
+                TodoEntity {
+                    id: 2,
+                    text: String::from("todo 2"),
+                    completed: false,
+                    labels: vec![label_1.clone()],
+                },
+            ]
+        );
+    }
+
+    #[cfg(feature = "database-test")]
     #[tokio::test]
     async fn crud_scenario() {
         // point1
